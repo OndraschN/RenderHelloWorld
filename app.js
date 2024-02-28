@@ -1,59 +1,71 @@
-const express = require("express");
-const app = express();
-const port = process.env.PORT || 3001;
+import express from "express";
+import bodyParser from "body-parser";
+import axios from "axios";
 
-app.get("/", (req, res) => {
-  console.log("Get / wurde aufgerufen");
-  console.error("Ein error log. ");
-  res.type('html').send(html)
+const app = express();
+const port = 3000;
+
+app.use(express.static("public"));
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Step 1: Make sure that when a user visits the home page,
+//   it shows a random activity.You will need to check the format of the
+//   JSON data from response.data and edit the index.ejs file accordingly.
+app.get("/", async (req, res) => {
+  try {
+    const response = await axios.get("https://bored-api.appbrewery.com/random");
+    const result = response.data;
+    //console.log(result);
+    res.render("index.ejs", { data: result });
+  } catch (error) {
+    console.error("Failed to make request:", error.message);
+    res.render("index.ejs", {
+      error: error.message,
+    });
+  }
 });
 
+app.post("/", async (req, res) => {
+  console.log(req.body);
 
-app.get("/test", (req, res) => res.type('html').send(test));
+  // Step 2: Play around with the drop downs and see what gets logged.
+  // Use axios to make an API request to the /filter endpoint. Making
+  // sure you're passing both the type and participants queries.
+  // Render the index.ejs file with a single *random* activity that comes back
+  // from the API request.
+  // Step 3: If you get a 404 error (resource not found) from the API request.
+  // Pass an error to the index.ejs to tell the user:
+  // "No activities that match your criteria."
+  let completeURL = "";
+  try {
+    let type = req.body.type;
+    let participants = req.body.participants;
+    console.log(`Der Typ aus dem Post-Request ist: ${type}`);
+    console.log(`Anzahl der Teilnehmer aus dem Request ist: ${participants}`);
+    completeURL = `https://bored-api.appbrewery.com/filter?type=${type}&participants=${participants}`;
+    
+    const response = await axios.get(completeURL);
+    const result = response.data;
+    console.log(result);
+    res.render("index.ejs", { data: result[Math.floor(Math.random() * result.length)],
+     });
+  } catch (error) {
+    console.error(error.response.status);
+    console.error("Failed to make request:", error.message);
+    let errorMsg = "";
+    if(error.response.status === 404) {
+      errorMsg = "No activities that match your criteria."
+    } else {
+      errorMsg = error.message
+    }
+    console.error("errorMsg: " + errorMsg);
+    res.render("index.ejs", {
+      error: errorMsg,
+    });
+  }
+  console.log(`Die komplette URL war: ${completeURL}`);
+});
 
-app.get("/contact", (req, res) => res.type('html').send(contact));
-
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
-
-server.keepAliveTimeout = 120 * 1000;
-server.headersTimeout = 120 * 1000;
-
-const html = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Hello from Render!</title>
-  </head>
-  <body>
-    <section>
-      Hello ladies and gentlemen!  First page from Ondrasch. Version 0.0.2
-    </section>
-  </body>
-</html>
-`
-const test = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Test from Render! First page from Ondrasch</title>
-  </head>
-  <body>
-    <section>
-      This is the test route!
-    </section>
-  </body>
-</html>
-`
-const contact = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>Test from Render! First page from Ondrasch</title>
-  </head>
-  <body>
-    <section>
-      <h1>This is the contact route!</h1>
-    </section>
-  </body>
-</html>
-`
+app.listen(port, () => {
+  console.log(`Server running on port: ${port}`);
+});
