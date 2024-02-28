@@ -22,11 +22,11 @@ const html = `
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Hello from Render! First page from Ondrasch. Version 0.0.1</title>
+    <title>Hello from Render!</title>
   </head>
   <body>
     <section>
-      Hello ladies and gentlemen!
+      Hello ladies and gentlemen!  First page from Ondrasch. Version 0.0.2
     </section>
   </body>
 </html>
